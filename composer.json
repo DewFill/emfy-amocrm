@@ -1,0 +1,6 @@
+{
+    "require": {
+        "amocrm/amocrm-api-library": "^1.7",
+        "opravdin/amohook": "^2.0"
+    }
+}

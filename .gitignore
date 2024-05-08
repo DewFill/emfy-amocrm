@@ -1,0 +1,6 @@
+certbot/cert.pem
+certbot/chain.pem
+certbot/fullchain.pem
+certbot/privkey.pem
+telegram.php
+vendor

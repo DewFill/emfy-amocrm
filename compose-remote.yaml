@@ -1,0 +1,39 @@
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile-remote
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - certs:/etc/letsencrypt/live/artemy.net
+      - dns-root:/root
+  dns:
+    image: technitium/dns-server
+    ports:
+      - "5380:5380/tcp" #DNS web console (HTTP)
+      - "53443:53443/tcp" #DNS web console (HTTPS)
+      - "53:53/udp" #DNS service
+      - "53:53/tcp" #DNS service
+      - "853:853/udp" #DNS-over-QUIC service
+      - "853:853/tcp" #DNS-over-TLS service
+#      - "443:443/udp" #DNS-over-HTTPS service (HTTP/3)
+#      - "443:443/tcp" #DNS-over-HTTPS service (HTTP/1.1, HTTP/2)
+#      - "80:80/tcp" #DNS-over-HTTP service (use with reverse proxy or certbot certificate renewal)
+      - "8053:8053/tcp" #DNS-over-HTTP service (use with reverse proxy)
+      - "67:67/udp" #DHCP service
+    env_file:
+      - .env
+    environment:
+      - DNS_SERVER_DOMAIN=artemy.net
+    sysctls:
+      - net.ipv4.ip_local_port_range=1024 65000
+
+volumes:
+  certs:
+    name: "certs"
+    driver: local
+  dns-root:
+    name: "dns-root"
+    driver: local

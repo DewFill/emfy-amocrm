@@ -1,0 +1,50 @@
+# syntax=docker/dockerfile:1
+FROM php:8.2.16-apache
+
+# Install zip for Composer
+RUN apt-get update && apt install zip --assume-yes
+
+
+# setting up Apache as a reverse proxy server
+RUN a2enmod proxy
+RUN a2enmod proxy_http
+
+
+# Install CertBot from LetsEncrypt
+RUN apt update && apt install certbot --assume-yes
+
+
+## Copy SSL certificates to the container
+RUN mkdir -p /etc/ssl/private/
+COPY certbot/cert.pem /etc/ssl/private/cert.pem
+COPY certbot/chain.pem /etc/ssl/private/chain.pem
+COPY certbot/privkey.pem /etc/ssl/private/privkey.pem
+
+# Copy apache config in sites-available
+COPY certbot/apache_ssl_config.conf /etc/apache2/sites-available/default-ssl.conf
+
+# Enable Apache SSL module && Update Apache SSL configuration && Restart Apache to apply changes
+RUN a2enmod ssl && a2ensite default-ssl.conf && service apache2 restart
+
+
+
+# Use the default production configuration for PHP runtime arguments, see
+RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
+
+
+# Install Composer
+RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
+    && php composer-setup.php  \
+    && php -r "unlink('composer-setup.php');" \
+    && mv composer.phar /usr/local/bin/composer
+
+
+# Copy composer file in container
+COPY composer.json /var/www/html
+
+
+# Install Composer dependencies
+RUN composer install
+
+# Copy project files
+COPY . /var/www/html

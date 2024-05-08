@@ -1,0 +1,11 @@
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile-local
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - certs:/etc/letsencrypt/live/artemy.net
+      - dns-root:/root
