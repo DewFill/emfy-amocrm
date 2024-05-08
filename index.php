@@ -1,6 +1,7 @@
 <?php
 require "vendor/autoload.php";
 
+use AmoCRM\Client\AmoCRMApiClient;
 use AmoCRM\Client\LongLivedAccessToken;
 use AmoCRM\Models\NoteType\CommonNote;
 use Opravdin\AmoHook\AmoHook;
@@ -21,7 +22,7 @@ if (empty($env["ACCESS_TOKEN"])) {
 $accessToken = $env["ACCESS_TOKEN"];
 
 
-$apiClient = new \AmoCRM\Client\AmoCRMApiClient();
+$apiClient = new AmoCRMApiClient();
 $longLivedAccessToken = new LongLivedAccessToken($accessToken);
 $apiClient->setAccessToken($longLivedAccessToken)
     ->setAccountBaseDomain('meamoartemynet.amocrm.ru');
@@ -42,8 +43,6 @@ $hook = AmoHook::build($_POST)
 
             $entity = $entity->getOne($payload["data"]["id"]);
 
-            $responsibleUser = $apiClient->users()->getOne($entity->getResponsibleUserId());
-
             $commonNote = (new CommonNote())
                 ->setEntityId($entity->getId())
                 ->setText(
@@ -58,14 +57,12 @@ $hook = AmoHook::build($_POST)
         [Entities::CONTACT, Entities::LEAD],
         [Events::UPDATE],
         function ($payload) use ($apiClient) {
-            log_tg($payload);
             if ($payload["entity"] === Entities::LEAD) {
                 $entity = $apiClient->leads();
             } else {
                 $entity = $apiClient->contacts();
             }
 
-            log_tg($apiClient->leads()->getLastRequestInfo());
             $entity = $entity->getOne($payload["data"]["id"]);
 
             $commonNote = (new CommonNote())
